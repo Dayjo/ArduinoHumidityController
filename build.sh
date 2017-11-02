@@ -1,0 +1,1 @@
+rm ../HumidityController.zip | zip ../HumidityController.zip -r -9 ../HumidityController/* ../HumidityController.zip

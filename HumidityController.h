@@ -10,15 +10,20 @@
 class HumidityController
 {
   public:
-    HumidityController(int sensorPin, int motorEnablePin, int motorIn1Pin, int motorIn2Pin);
-    void dot();
-    void dash();
+    HumidityController(int motorEnablePin, int motorIn1Pin, int motorIn2Pin, double desiredTemperature, double maxHumidity);
+    String updateStatus(double temp, double humidity);
+    void begin();
     void setMotor(int speed, bool reverse);
   private:
-    int _sensorPin;
     int _motorEnablePin;
     int _motorIn1Pin;
     int _motorIn2Pin;
+    int _motorSpeed;
+    bool _motorReversed;
+    double _temp;
+    double _humidity;
+    double _desiredTemperature;
+    double _maxHumidity;
 };
 
 #endif
