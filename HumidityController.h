@@ -11,7 +11,7 @@ class HumidityController
 {
   public:
     HumidityController(int motorEnablePin, int motorIn1Pin, int motorIn2Pin, double desiredTemperature, double maxHumidity);
-    String updateStatus(double temp, double humidity);
+    String updateStatus(double temp, double humidity, bool reverse = true);
     void begin();
     void setMotor(double speed, bool reverse);
   private:

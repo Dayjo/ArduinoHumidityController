@@ -23,13 +23,12 @@ HumidityController::HumidityController(int motorEnablePin, int motorIn1Pin, int 
   _motorSpeed = 0;
   _motorBaseSpeed = 50;
   _motorMaxSpeed = 100;
-  _motorMinSpeed = 10;
-
+  _motorMinSpeed = 40;
   // motor speed adjustment to add
   _motorAdjustment = 0;
 }
 
-String HumidityController::updateStatus(double temp, double humidity) {
+String HumidityController::updateStatus(double temp, double humidity, bool reverse) {
     _temp = temp;
     _humidity = humidity;
 
@@ -38,21 +37,37 @@ String HumidityController::updateStatus(double temp, double humidity) {
     // if it's more than the max humidity, increase the fan speed each loop until it's less
     if ( _humidity > _maxHumidity ) {
         _motorAdjustment += round((_humidity - _maxHumidity) / 2); // 0 - 100(%)
+		reverse = true; // suck out all that moisture
     }
     else {
 
-        if ( _humidity <= _maxHumidity && _motorSpeed > 0 && _motorAdjustment > 0 ) {
-            _motorAdjustment--;
-        }
-
         // If the humidity is acceptable and it's not hot enough, reduce the speed of the fan
-        if ( _temp < _desiredTemperature && _motorSpeed > 0) {
-            _motorAdjustment--;
+        if ( _temp < _desiredTemperature) {
+			if ( _motorSpeed > _motorMinSpeed ) {
+	            _motorAdjustment--;
+			}
+			reverse = true; // Air flow mode
         }
+		// It's too hot, so cool it down
+		else if ( _temp > _desiredTemperature  ) {
+			if ( _motorSpeed < _motorMaxSpeed ) {
+				_motorAdjustment++;
+			}
+			reverse = false; // try to pump cool air in
+		}
+		// If everything is ok, slow the motor down as much as possible
+		else if ( _humidity <= _maxHumidity  ) {
+			if (_motorSpeed > _motorMinSpeed && _motorAdjustment > 0 ) {
+	            _motorAdjustment--;
+			}
+			reverse = true; // Air flow mode
+	   }
+
     }
 
+	// @TODO fix this, wtf?
     if ( _motorAdjustment < -100 ) {
-        _motorAdjustment = 0;
+        _motorAdjustment = -100;
     }
     else if ( _motorAdjustment > 100 ) {
         _motorAdjustment = 100;
@@ -64,12 +79,13 @@ String HumidityController::updateStatus(double temp, double humidity) {
     if ( _motorSpeed > _motorMaxSpeed ) {
         _motorSpeed = _motorMaxSpeed;
     }
-    else if ( _motorSpeed < _motorMinSpeed ) {
+
+	if ( _motorSpeed < _motorMinSpeed ) {
         _motorSpeed = _motorMinSpeed;
     }
 
-    setMotor(_motorSpeed, false);
-    return String(_motorSpeed) + "[" + HIGH + "]\nAdjustment: " + String(_motorAdjustment) + "\nh: " + String(_humidity) + ". max: " + String(_maxHumidity);
+    setMotor(_motorSpeed, reverse);
+    return "Speed: " + String(_motorSpeed) + "\nAdjustment: " + String(_motorAdjustment) + "\nReverse: " + String(reverse);
 }
 
 
